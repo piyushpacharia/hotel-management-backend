@@ -7,7 +7,7 @@ const adminAuthSchema = new mongoose.Schema({
         trim: true,
     },
     number: {
-        type: Number
+        type: String, 
     },
     email: {
         type: String,
@@ -25,14 +25,14 @@ const adminAuthSchema = new mongoose.Schema({
         enum: ['admin'],
         required: true,
     },
-    imageUrl: {
+    profile_thumbnail: {
         type: String,
-        default: '',
+        default: null, 
     },
 }, {
-    timestamps: true,
+    timestamps: true, 
 });
 
-const Admin = mongoose.model('adminAuth', adminAuthSchema);
+const adminModel = mongoose.model('AdminModel', adminAuthSchema); 
 
-export default Admin;
+export default adminModel;

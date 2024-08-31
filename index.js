@@ -6,13 +6,19 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoute/authRoutes.js';
-import addRoomRoute from './routes/rooms/roomRoute.js';
+import addRoomRoute from './routes/roomRoute/roomRoute.js';
+import roomCategory  from './routes/roomCategoryRoute/roomCategoryRoute.js';
+import incomeRoute from "./routes/incomeRoute/incomeRoute.js"
+import expenseRoute from "./routes/expenseRoute/expenseRoute.js"
+import errorHandler from './middleware/errorHandler.js';
+
 
 const app = express();
 
 
 app.use(cors());
 app.use(express.json());
+app.use(errorHandler);
 
 dotenv.config();
 
@@ -22,6 +28,7 @@ mongoose.connect(process.env.DATA_BASE)
     .catch((err) => console.log("Error occurred in database", err.message));
 
 // Setup __dirname and __filename for ES modules
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -31,6 +38,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Route handling
 app.use('/auth', authRoutes);
 app.use('/rooms', addRoomRoute);
+app.use('/category', roomCategory);
+app.use('/income', incomeRoute);
+app.use('/expense', expenseRoute);
 
 
 // Setup port

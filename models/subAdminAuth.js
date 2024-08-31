@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const subAdminSchema = new mongoose.Schema({
-    createdBy: {
+    adminId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'adminAuth',
     },
@@ -30,6 +30,6 @@ const subAdminSchema = new mongoose.Schema({
     timestamps: true,
 });
 
-const SubAdmin = mongoose.model('subAdminAuth', subAdminSchema);
+const subAdmin = mongoose.model('subAdminAuth', subAdminSchema);
 
-export default SubAdmin;
+export default subAdmin;
