@@ -7,7 +7,7 @@ const expenseSchema = new mongoose.Schema({
     },
     expenseName: { type: String, required: true },
     expenseType: { type: String, required: true },
-    expense_thumbnail: {
+    expenseThumbnail: {
         type: String,
         default: null,
     },

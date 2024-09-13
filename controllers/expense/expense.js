@@ -5,7 +5,7 @@ import Joi from "joi";
 
 // Controller to add a new expense
 export const addExpense = async (req, res) => {
-  const expense_thumbnail = req.file ? req.file.path : null;
+  const expenseThumbnail = req.files;
 
 
   const validateExpenseSchema = Joi.object({
@@ -32,7 +32,7 @@ export const addExpense = async (req, res) => {
       expenseType,
       expenseAmount,
       description,
-      expense_thumbnail,
+      expenseThumbnail,
     });
 
     await newExpense.save();
@@ -55,7 +55,7 @@ export const getExpenses = async (req, res) => {
 // Controller to update expenses
 export const updateExpense = async (req, res) => {
   const { id } = req.params; // Get the expense ID from the request parameters
-  const expense_thumbnail = req.file ? req.file.path : null; // Get the thumbnail file path if uploaded
+  const expenseThumbnail = req.files // Get the thumbnail file path if uploaded
 
   // Validation schema for updating an expense
   const validateExpenseUpdate = Joi.object({
@@ -64,7 +64,7 @@ export const updateExpense = async (req, res) => {
     expenseType: Joi.string(),
     expenseAmount: Joi.number(),
     description: Joi.string().optional(),
-    expense_thumbnail: Joi.string().optional(),
+    expenseThumbnail: Joi.string().optional(),
   });
 
   // Validate request body
@@ -77,8 +77,8 @@ export const updateExpense = async (req, res) => {
     const updateData = { ...req.body };
 
     // If a new expense thumbnail is uploaded, add it to the update data
-    if (expense_thumbnail) {
-      updateData.expense_thumbnail = expense_thumbnail;
+    if (expenseThumbnail) {
+      updateData.expenseThumbnail = expenseThumbnail;
     }
 
     // Find and update the expense in the database

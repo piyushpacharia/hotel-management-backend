@@ -1,6 +1,6 @@
 import JWTService from "../services/JWTService.js";
 
-const authMiddleware = async (req, res, next) => {
+export const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -34,4 +34,13 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-export default authMiddleware;
+export const checkAdminRole = (req, res, next) => {
+  // Assuming `req.user` contains the user's information after authentication
+  if (req.user && req.user.role === 'admin') {
+    // If the user is an admin, proceed to the next middleware/controller
+    next();
+  } else {
+    // If the user is not an admin, return a 403 Forbidden error
+    return res.status(403).json({ message: 'Access denied. Admins only.' });
+  }
+};

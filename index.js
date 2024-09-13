@@ -5,11 +5,14 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import authRoutes from './routes/authRoute/authRoutes.js';
-import addRoomRoute from './routes/roomRoute/roomRoute.js';
-import roomCategory  from './routes/roomCategoryRoute/roomCategoryRoute.js';
-import incomeRoute from "./routes/incomeRoute/incomeRoute.js"
-import expenseRoute from "./routes/expenseRoute/expenseRoute.js"
+import authRoutes from './routes/authRoute/auth.routes.js';
+import addRoomRoute from './routes/roomRoute/room.routes.js';
+import roomCategory  from './routes/roomCategoryRoute/roomCategory.routes.js';
+import incomeRoute from "./routes/incomeRoute/income.routes.js"
+import expenseRoute from "./routes/expenseRoute/expense.routes.js"
+import packageRoute from "./routes/packageRoute/package.routes.js"
+import bookingRoute from "./routes/bookingRoute/booking.routes.js"
+
 import errorHandler from './middleware/errorHandler.js';
 
 
@@ -41,6 +44,8 @@ app.use('/rooms', addRoomRoute);
 app.use('/category', roomCategory);
 app.use('/income', incomeRoute);
 app.use('/expense', expenseRoute);
+app.use('/package', packageRoute);
+app.use('/booking', bookingRoute);
 
 
 // Setup port

@@ -5,14 +5,21 @@ const roomCategorySchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'adminAuth',
     },
-    type: { type: String, required: true }
+    type: { type: String, required: true , unique: true,},
+    
+    numberOfRooms: {
+        type: Number,
+        required: true,
+        default: 0
+
+    },
 },
     {
         timestamps: true,
     }
 );
 
-const roomCategory = mongoose.model('roomCategoryModel', roomCategorySchema);
+const roomCategoryModel = mongoose.model('roomCategoryModel', roomCategorySchema);
 
-export default roomCategory
+export default roomCategoryModel
 

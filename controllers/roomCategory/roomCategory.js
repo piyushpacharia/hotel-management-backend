@@ -1,4 +1,4 @@
-import roomCategory from "../../models/roomCategory.js";
+import roomCategoryModel from "../../models/roomCategory.js";
 import Joi from "joi";
 
 
@@ -16,12 +16,15 @@ export const addRoomCategory = async (req, res) => {
     // Validate request body
     const { error } = roomCategorySchema.validate(req.body);
     if (error) return res.status(400).json({ message: error.details[0].message });
-  
+
     const { type } = req.body;
-    const adminId = req.user._id;
-   
+
+
+    const adminId = req.user.adminId || req.user._id;
+
+
     // Create a new room category document
-    const newCategory = new roomCategory({
+    const newCategory = new roomCategoryModel({
       type,
       adminId
     });
@@ -35,29 +38,32 @@ export const addRoomCategory = async (req, res) => {
 
 // Get all room categories
 export const getRoomCategories = async (req, res) => {
+
+  const adminId = req.user.adminId || req.user._id
+ 
+
   try {
-    const categories = await roomCategory.find()
+    const categories = await roomCategoryModel.find({ adminId: adminId })
     res.status(200).json({ data: categories });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
 // Update a room category by ID
 export const updateRoomCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { type } = req.body; 
+    const { type } = req.body;
 
-  
+
     if (!type) {
       return res.status(400).json({ message: "Type is required for updating the room category" });
     }
-    
-    const updatedCategory = await roomCategory.findByIdAndUpdate(
+
+    const updatedCategory = await roomCategoryModel.findByIdAndUpdate(
       id,
-      { type }, 
-      { new: true, runValidators: true } 
+      { type },
+      { new: true, runValidators: true }
     );
 
     if (!updatedCategory) {
@@ -76,7 +82,7 @@ export const deleteRoomCategory = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deletedCategory = await roomCategory.findByIdAndDelete(id);
+    const deletedCategory = await roomCategoryModel.findByIdAndDelete(id);
 
     if (!deletedCategory) return res.status(404).json({ message: "Room category not found" });
 

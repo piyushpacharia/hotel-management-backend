@@ -1,3 +1,4 @@
+
 import mongoose from 'mongoose';
 
 const adminAuthSchema = new mongoose.Schema({
@@ -7,7 +8,7 @@ const adminAuthSchema = new mongoose.Schema({
         trim: true,
     },
     number: {
-        type: String, 
+        type: String,
     },
     email: {
         type: String,
@@ -25,14 +26,19 @@ const adminAuthSchema = new mongoose.Schema({
         enum: ['admin'],
         required: true,
     },
-    profile_thumbnail: {
+    status: {
         type: String,
-        default: null, 
+        enum: ['active', 'deactive'],
+        default: 'active',
+    },
+    profileThumbnail: {
+        type: Array,
+        default: null,
     },
 }, {
-    timestamps: true, 
+    timestamps: true,
 });
 
-const adminModel = mongoose.model('AdminModel', adminAuthSchema); 
+const adminModel = mongoose.model('AdminModel', adminAuthSchema);
 
 export default adminModel;
