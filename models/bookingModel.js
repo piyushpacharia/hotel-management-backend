@@ -36,7 +36,8 @@ const bookingSchema = new mongoose.Schema(
     packages: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "packageModel",
-      required: true,
+      default:null
+      
     },
     roomType: {
       type: mongoose.Schema.Types.ObjectId,

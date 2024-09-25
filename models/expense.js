@@ -3,12 +3,12 @@ import mongoose from "mongoose";
 const expenseSchema = new mongoose.Schema({
     adminId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'adminAuth',
+        ref: 'adminModel',
     },
     expenseName: { type: String, required: true },
     expenseType: { type: String, required: true },
     expenseThumbnail: {
-        type: String,
+        type: Array,
         default: null,
     },
     expenseAmount: { type: Number, required: true },

@@ -23,7 +23,7 @@ export const addExpense = async (req, res) => {
       .json({ message: "Validation error", error: error.details[0].message });
 
   const { expenseName, expenseType, expenseAmount, description } = req.body;
-  const adminId = req.user._id;
+  const adminId = req.user.adminId || req.user._id;
 
   try {
     const newExpense = new expenseModel({
@@ -44,8 +44,12 @@ export const addExpense = async (req, res) => {
 
 // Controller to get all expenses
 export const getExpenses = async (req, res) => {
+
+  const adminId = req.user.adminId || req.user._id
+
+
   try {
-    const expenses = await expenseModel.find()
+    const expenses = await expenseModel.find({adminId:adminId})
     res.status(200).json({ expenses });
   } catch (err) {
     res.status(500).json({ message: "Failed to retrieve expenses", error: err.message });
@@ -54,8 +58,8 @@ export const getExpenses = async (req, res) => {
 
 // Controller to update expenses
 export const updateExpense = async (req, res) => {
-  const { id } = req.params; // Get the expense ID from the request parameters
-  const expenseThumbnail = req.files // Get the thumbnail file path if uploaded
+  const { id } = req.params;
+  const expenseThumbnail = req.files 
 
   // Validation schema for updating an expense
   const validateExpenseUpdate = Joi.object({

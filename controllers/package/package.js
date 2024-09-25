@@ -20,8 +20,13 @@ const validatePackageData = (data) => {
 
 // Add a new package
 export const addPackage = async (req, res) => {
+
+
+
   const { packages,price,description } = req.body;
   const adminId = req.user.adminId || req.user._id; 
+
+
 
   try {
     validatePackageData(req.body);

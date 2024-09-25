@@ -12,6 +12,8 @@ import incomeRoute from "./routes/incomeRoute/income.routes.js"
 import expenseRoute from "./routes/expenseRoute/expense.routes.js"
 import packageRoute from "./routes/packageRoute/package.routes.js"
 import bookingRoute from "./routes/bookingRoute/booking.routes.js"
+import employeeRoute from "./routes/employeeRoute/employee.routes.js"
+import attendanceRoute from "./routes/attedanceRoute/attendance.Routes.js"
 
 import errorHandler from './middleware/errorHandler.js';
 
@@ -46,6 +48,8 @@ app.use('/income', incomeRoute);
 app.use('/expense', expenseRoute);
 app.use('/package', packageRoute);
 app.use('/booking', bookingRoute);
+app.use('/employee', employeeRoute);
+app.use('/attendance', attendanceRoute);
 
 
 // Setup port

@@ -39,6 +39,6 @@ const adminAuthSchema = new mongoose.Schema({
     timestamps: true,
 });
 
-const adminModel = mongoose.model('AdminModel', adminAuthSchema);
+const adminModel = mongoose.model('adminModel', adminAuthSchema);
 
 export default adminModel;

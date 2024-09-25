@@ -14,8 +14,8 @@ const bookingValidationSchema = Joi.object({
     phone: Joi.string().required(),
     email: Joi.string().email().required(),
     address: Joi.string().required(),
-    packages: Joi.string().required(),
     roomType: Joi.string().required(),
+    packages: Joi.string().optional().allow(null), // Optional and can be null
     roomNo: Joi.string().required(),
     arrivedDate: Joi.date().optional(),
     departDate: Joi.date().required(),
@@ -23,37 +23,24 @@ const bookingValidationSchema = Joi.object({
     note: Joi.string().optional(),
 });
 
-const validateBooking = (data) => {
-    const { error } = bookingValidationSchema.validate(data, { abortEarly: false });
-    return error ? error.details.map((detail) => detail.message) : null;
-};
-
-
-
 export const addBooking = async (req, res) => {
-
-
-    const { firstName, lastName, gender, phone, meal, email, address, packages, roomType, roomNo, arrivedDate, departDate, totalPerson, note } = req.body;
+    const { firstName, lastName, gender, phone, meal, email, address, roomType, packages, roomNo, arrivedDate, departDate, totalPerson, note } = req.body;
     const adminId = req.user.adminId || req.user._id;
     const documentThumbnail = req.files;
 
+    console.log(req.body);
 
-
-    const validationErrors = validateBooking(req.body);
-    if (validationErrors) {
-        return res.status(400).json({ message: "Validation error", errors: validationErrors });
-    }
+    // const { error } = bookingValidationSchema.validate(req.body);
+    // if (error) {
+    //     return res.status(400).json({ message: "Validation error", errors: error.details });
+    // }
 
     try {
-        const selectedPackage = await packageModel.findById(packages);
+        // Check if room type and room number are valid
         const selectedRoomType = await roomCategoryModel.findById(roomType);
         const selectedRoom = await roomModel.findById(roomNo);
 
-        if (!selectedPackage || !selectedRoomType || !selectedRoom) {
-            return res.status(404).json({ message: "Package, room type, or room not found" });
-        }
-
-        if (selectedRoom.status !== "open") {
+        if (!selectedRoom || selectedRoom.status !== "open") {
             return res.status(400).json({ message: "Room is not available" });
         }
 
@@ -66,9 +53,20 @@ export const addBooking = async (req, res) => {
         }
 
         const roomPricePerNight = selectedRoom.rent;
-        const packagePrice = selectedPackage.price;
+        let packagePrice = 0;
+
+        // Handle package price if package is selected
+        if (packages) {
+            const selectedPackage = await packageModel.findById(packages);
+            if (selectedPackage) {
+                packagePrice = selectedPackage.price;
+            }
+        }
+
+        // Calculate total booking amount
         const totalBookingAmount = (roomPricePerNight * numberOfNights) + (packagePrice * numberOfNights);
 
+        // Create the new booking object
         const newBooking = new bookingModel({
             adminId,
             firstName,
@@ -79,38 +77,44 @@ export const addBooking = async (req, res) => {
             email,
             address,
             documentThumbnail,
-            packages,
+            packages: packages || null,
             roomType,
             roomNo,
             arrivedDate,
             departDate,
             totalPerson,
             note,
-            bookingAmount: totalBookingAmount
+            bookingAmount: totalBookingAmount,
         });
 
+        // Save the booking
         await newBooking.save();
 
         // Add income entry
         const newIncome = new incomeModel({
             adminId,
-            incomeName:` Booking in `,
+            incomeName: `Booking in room ${roomNo}`,
             incomeType: 'Room Booking',
             incomeAmount: totalBookingAmount,
-            description: `Income from booking: ${firstName} ${lastName} in room number ${roomNo}`
+            description: `Income from booking: ${firstName} ${lastName} in room number ${roomNo}`,
         });
         await newIncome.save();
 
-        await packageModel.updateOne(
-            { _id: selectedPackage._id },
-            { $inc: { numberOfPackage: 1 } }
-        );
+        // Update package if applicable
+        if (packages) {
+            await packageModel.updateOne(
+                { _id: packages },
+                { $inc: { numberOfPackage: 1 } }
+            );
+        }
 
         res.status(201).json({ message: "Booking added successfully", booking: newBooking });
     } catch (error) {
         res.status(500).json({ message: "Failed to add booking", error: error.message });
     }
 };
+
+
 
 // Helper function to populate related fields
 const populateBookingDetails = () => [
@@ -123,7 +127,7 @@ const populateBookingDetails = () => [
 export const getBookingsByAdminId = async (req, res) => {
     const adminId = req.user.adminId || req.user._id;
     try {
-        const bookings = await bookingModel.find({ adminId })
+        const bookings = await bookingModel.find({ adminId: adminId })
             .populate(populateBookingDetails())
 
         res.status(200).json({ message: "Bookings fetched successfully", bookings });
@@ -150,7 +154,7 @@ export const updateBooking = async (req, res) => {
         // Calculate booking amount
         const roomRentPerNight = room.rent;
         const numberOfNights = (new Date(departDate) - new Date(arrivedDate)) / (1000 * 60 * 60 * 24);
-        const totalAmount = (roomRentPerNight * numberOfNights) + packageDetails.price;
+        const totalAmount = (roomRentPerNight * numberOfNights) + (packageDetails.price * numberOfNights);
 
         // Update booking with calculated total amount
         const updatedBooking = await bookingModel.findByIdAndUpdate(id, {
@@ -197,22 +201,28 @@ export const updateBooking = async (req, res) => {
 // Delete a booking by ID
 export const deleteBooking = async (req, res) => {
     const { id } = req.params;
+
     try {
-        const deletedBooking = await bookingModel.findByIdAndDelete(id);
+        const booking = await bookingModel.findById(id)
+
+        const deletedBooking = await bookingModel.findOneAndDelete(id)
+
 
         if (!deletedBooking) {
             return res.status(404).json({ message: "Booking not found" });
         }
+
+        await packageModel.updateOne(
+            { _id: booking.packages },
+            { $inc: { numberOfPackage: -1 } }
+        );
 
         res.status(200).json({ message: "Booking deleted successfully" });
     } catch (error) {
         res.status(500).json({ message: "Failed to delete booking", error: error.message });
     }
 
-    // await packageModel.updateOne(
-    //     { _id: deletedBooking._id },
-    //     { $inc: { numberOfPackage: -1 } }
-    // );
+
 };
 
 
