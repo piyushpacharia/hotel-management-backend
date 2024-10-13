@@ -12,8 +12,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'Akash';
 export const adminSignup = async (req, res) => {
   const profileThumbnail = req.files;
 
-
-  console.log("auth............",profileThumbnail)
   // Validation schema for user input
   const registerAdminSchema = Joi.object({
     email: Joi.string().email().allow(""),

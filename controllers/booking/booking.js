@@ -3,6 +3,9 @@ import roomCategoryModel from '../../models/roomCategory.js';
 import packageModel from '../../models/package.js';
 import roomModel from '../../models/rooms.js';
 import incomeModel from '../../models/income.js';
+import taxModel from '../../models/tax.model.js';
+import mealModel from '../../models/meal.js';
+
 import Joi from "joi";
 
 const bookingValidationSchema = Joi.object({
@@ -10,30 +13,47 @@ const bookingValidationSchema = Joi.object({
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
     gender: Joi.string().valid("male", "female", "other").required(),
-    meal: Joi.string().valid("breakfast", "lunch", "dinner", "none").required(),
+    meal: Joi.string().required(),
     phone: Joi.string().required(),
     email: Joi.string().email().required(),
     address: Joi.string().required(),
     roomType: Joi.string().required(),
-    packages: Joi.string().optional().allow(null), // Optional and can be null
+    packages: Joi.string().optional().allow(""), 
     roomNo: Joi.string().required(),
     arrivedDate: Joi.date().optional(),
     departDate: Joi.date().required(),
     totalPerson: Joi.number().integer().min(1).required(),
+    tax: Joi.string().required(),
     note: Joi.string().optional(),
 });
 
 export const addBooking = async (req, res) => {
-    const { firstName, lastName, gender, phone, meal, email, address, roomType, packages, roomNo, arrivedDate, departDate, totalPerson, note } = req.body;
+    const { 
+        firstName, 
+        lastName, 
+        gender, 
+        phone, 
+        meal, 
+        email, 
+        address, 
+        roomType, 
+        packages, 
+        roomNo, 
+        arrivedDate, 
+        departDate, 
+        totalPerson, 
+        note, 
+        tax 
+    } = req.body;
+
+
     const adminId = req.user.adminId || req.user._id;
-    const documentThumbnail = req.files;
-
-    console.log(req.body);
-
-    // const { error } = bookingValidationSchema.validate(req.body);
-    // if (error) {
-    //     return res.status(400).json({ message: "Validation error", errors: error.details });
-    // }
+    const documentThumbnail =req.files?.documentThumbnail?.map(file => file.filename) || [];
+    console.log(documentThumbnail)
+    const { error } = bookingValidationSchema.validate(req.body);
+    if (error) {
+        return res.status(400).json({ message: "Validation error", errors: error.details });
+    }
 
     try {
         // Check if room type and room number are valid
@@ -63,8 +83,22 @@ export const addBooking = async (req, res) => {
             }
         }
 
+        // Retrieve meal price based on selected meal
+        const selectedMeal = await mealModel.findById(meal);
+        const mealPrice = selectedMeal.price ? selectedMeal.price : 0; 
+
         // Calculate total booking amount
-        const totalBookingAmount = (roomPricePerNight * numberOfNights) + (packagePrice * numberOfNights);
+        let totalBookingAmount = (roomPricePerNight * numberOfNights) + (packagePrice * numberOfNights) + (mealPrice * totalPerson);
+
+        // Retrieve tax details
+        const selectedTax = await taxModel.findById(tax);
+        if (selectedTax) {
+            if (selectedTax.type === "fixed") {
+                totalBookingAmount += selectedTax.amount; 
+            } else if (selectedTax.type === "percentage") {
+                totalBookingAmount += (totalBookingAmount * (selectedTax.amount / 100));
+            }
+        }
 
         // Create the new booking object
         const newBooking = new bookingModel({
@@ -83,12 +117,16 @@ export const addBooking = async (req, res) => {
             arrivedDate,
             departDate,
             totalPerson,
+            tax,
             note,
             bookingAmount: totalBookingAmount,
         });
 
         // Save the booking
         await newBooking.save();
+
+        // Update room status to "booked"
+        await roomModel.findByIdAndUpdate(roomNo, { status: "booked" });
 
         // Add income entry
         const newIncome = new incomeModel({
@@ -116,11 +154,14 @@ export const addBooking = async (req, res) => {
 
 
 
+
 // Helper function to populate related fields
 const populateBookingDetails = () => [
     { path: 'packages', select: 'packages price' },
     { path: 'roomType', select: 'type' },
     { path: 'roomNo', select: 'roomNumber rent' },
+    { path: 'meal', select: 'name price' },
+
 ];
 
 
@@ -140,12 +181,31 @@ export const getBookingsByAdminId = async (req, res) => {
 export const updateBooking = async (req, res) => {
     const { id } = req.params;
 
-    const { firstName, lastName, gender, phone, email, address, packages, roomType, roomNo, arrivedDate, departDate, totalPerson, note } = req.body;
+    const { 
+        firstName, 
+        lastName, 
+        gender, 
+        phone, 
+        email, 
+        address, 
+        packages, 
+        roomType, 
+        roomNo, 
+        arrivedDate, 
+        departDate, 
+        totalPerson, 
+        note, 
+        meal,
+        tax 
+    } = req.body;
     const documentThumbnail = req.files;
+
     try {
         // Find the room and package details
         const room = await roomModel.findById(roomNo).populate('type', 'type');
         const packageDetails = await packageModel.findById(packages);
+        const selectedMeal = await mealModel.findById(meal);
+        const selectedTax = await taxModel.findById(tax);
 
         if (!room || !packageDetails) {
             return res.status(404).json({ message: "Room or package not found" });
@@ -154,7 +214,22 @@ export const updateBooking = async (req, res) => {
         // Calculate booking amount
         const roomRentPerNight = room.rent;
         const numberOfNights = (new Date(departDate) - new Date(arrivedDate)) / (1000 * 60 * 60 * 24);
-        const totalAmount = (roomRentPerNight * numberOfNights) + (packageDetails.price * numberOfNights);
+        
+        // Calculate total amount
+        let totalAmount = (roomRentPerNight * numberOfNights) + (packageDetails.price * numberOfNights);
+
+        // Calculate meal price if meal is selected
+        const mealPrice = selectedMeal.price ? selectedMeal.price : 0; 
+        totalAmount += mealPrice * totalPerson; 
+
+        // Calculate tax amount if tax is selected
+        if (selectedTax) {
+            if (selectedTax.type === "fixed") {
+                totalAmount += selectedTax.amount;
+            } else if (selectedTax.type === "percentage") {
+                totalAmount += (totalAmount * (selectedTax.amount / 100));
+            }
+        }
 
         // Update booking with calculated total amount
         const updatedBooking = await bookingModel.findByIdAndUpdate(id, {
@@ -197,6 +272,7 @@ export const updateBooking = async (req, res) => {
         res.status(500).json({ message: "Failed to update booking", error: error.message });
     }
 };
+
 
 // Delete a booking by ID
 export const deleteBooking = async (req, res) => {

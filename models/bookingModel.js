@@ -32,7 +32,7 @@ const bookingSchema = new mongoose.Schema(
       required: true,
     },
    
-    documentThumbnail: {type:Array},
+    documentThumbnail:[{ type: Array }],
     packages: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "packageModel",
@@ -50,10 +50,17 @@ const bookingSchema = new mongoose.Schema(
       required: true,
     },
     meal: {
-      type: String,
-      enum: ["breakfast", "lunch", "dinner", "none"],
-      default: "none",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "mealModel",
+      required: true,
     },
+    tax: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "tax",
+      required: true,
+    },
+
+
     arrivedDate: {
       type: Date,
       default: Date.now,

@@ -4,7 +4,8 @@ import attendanceModel from "../../models/attendance.js";
 
 export const addAttendance = async (req, res, next) => {
 
-  console.log(req.body)
+  console.log(req.body);
+
   const inputSanitizer = Joi.object({
     adminId: Joi.string().optional(),
     employeeId: Joi.string().required(),
@@ -13,6 +14,7 @@ export const addAttendance = async (req, res, next) => {
     checkOut: Joi.string().optional(),
     remarks: Joi.string().allow(""),
   });
+
   try {
     const { error } = inputSanitizer.validate(req.body);
     if (error) {
@@ -21,14 +23,17 @@ export const addAttendance = async (req, res, next) => {
 
     const { employeeId, status, checkIn, checkOut, remarks } = req.body;
 
-    const newAttendance = new attendanceModel({
+    // If status is 'absent', do not accept checkIn and checkOut times
+    const attendanceData = {
       adminId: req.user.adminId || req.user._id,
       employeeId: employeeId,
       status: status,
-      checkIn: checkIn,
-      checkOut: checkOut,
+      checkIn: status === 'absent' ? "" : checkIn,  
+      checkOut: status === 'absent' ? "" : checkOut,  
       remarks: remarks,
-    });
+    };
+
+    const newAttendance = new attendanceModel(attendanceData);
 
     await newAttendance.save();
     res.status(201).json({ message: 'Attendance added successfully', newAttendance });
@@ -36,6 +41,7 @@ export const addAttendance = async (req, res, next) => {
     res.status(500).json({ error: 'Failed to add attendance', details: error.message });
   }
 };
+
 
 export const updateAttendance = async (req, res, next) => {
   const inputSanitizer = Joi.object({
