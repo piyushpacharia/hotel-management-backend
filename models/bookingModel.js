@@ -52,14 +52,18 @@ const bookingSchema = new mongoose.Schema(
     meal: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "mealModel",
-      required: true,
+     
     },
     tax: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "tax",
-      required: true,
+      
     },
-
+    bookingSourceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "bookingSourceModel",
+      
+    },
 
     arrivedDate: {
       type: Date,

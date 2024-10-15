@@ -1,13 +1,19 @@
 import expenseModel from "../../models/expense.js";
 import Joi from "joi";
-
+import { ledgerModel } from "../../models/ledger.model.js"
+import { ledgerHistoryModel } from "../../models/ledgerHistory.model.js"
 
 
 // Controller to add a new expense
 export const addExpense = async (req, res) => {
-  const expenseThumbnail = req.files;
+  // Extracting filenames of uploaded thumbnails, if available
+  const expenseThumbnail = req.files?.expenseThumbnail?.map(file => file.filename) || [];
 
+  // Logging for debugging purposes
+  console.log(req.body);
+  console.log(expenseThumbnail);
 
+  // Defining the validation schema for the expense
   const validateExpenseSchema = Joi.object({
     adminId: Joi.string(),
     expenseName: Joi.string().required(),
@@ -16,16 +22,35 @@ export const addExpense = async (req, res) => {
     description: Joi.string().optional(),
   });
 
+  // Validating the request body using Joi schema
   const { error } = validateExpenseSchema.validate(req.body);
-  if (error)
-    return res
-      .status(400)
-      .json({ message: "Validation error", error: error.details[0].message });
+  if (error) {
+    return res.status(400).json({success:false,
+      message: "Validation error",
+      error: error.details[0].message,
+    });
+  }
 
+  // Extracting fields from the request body
   const { expenseName, expenseType, expenseAmount, description } = req.body;
   const adminId = req.user.adminId || req.user._id;
 
   try {
+    // Check if there's an open ledger with no closing balance
+    const ledger = await ledgerModel.findOne({ closingBalance: null });
+        if (!ledger) {
+            return res.status(401).json({ success: false, message: "Open Ledger First" });
+        }
+
+    // Creating a new ledger history entry for the expense
+    await ledgerHistoryModel.create({
+      ledgerId: ledger._id,
+      type: `Expense ${expenseName}`,
+      debit: expenseAmount,
+      description: description || '',
+    });
+
+    // Creating a new expense document
     const newExpense = new expenseModel({
       adminId,
       expenseName,
@@ -35,10 +60,22 @@ export const addExpense = async (req, res) => {
       expenseThumbnail,
     });
 
+    // Saving the new expense to the database
     await newExpense.save();
-    res.status(201).json({ message: "Expense added successfully", expense: newExpense });
+
+    // Sending a success response
+    res.status(201).json({success:true,
+      message: "Expense added successfully",
+      expense: newExpense,
+    });
   } catch (err) {
-    res.status(500).json({ message: "Failed to add expense", error: err.message });
+    // Handling any errors and sending a failure response
+    console.error(err.message);
+    res.status(500).json({
+      success:false,
+      message: "Failed to add expense",
+      error: err.message,
+    });
   }
 };
 
@@ -59,7 +96,7 @@ export const getExpenses = async (req, res) => {
 // Controller to update expenses
 export const updateExpense = async (req, res) => {
   const { id } = req.params;
-  const expenseThumbnail = req.files 
+  const expenseThumbnail =req.files?.expenseThumbnail?.map(file => file.filename) || [];
 
   // Validation schema for updating an expense
   const validateExpenseUpdate = Joi.object({

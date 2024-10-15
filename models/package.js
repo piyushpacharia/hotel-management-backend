@@ -17,12 +17,7 @@ const packageSchema = new mongoose.Schema({
     description:{
         type:String,
         required:true
-    },
-    numberOfPackage: {
-        type: Number,
-        required: true,
-        default: 0
-    },
+    }
 }, {
     timestamps: true,
 });

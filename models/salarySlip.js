@@ -8,15 +8,12 @@ const payslipSchema = new mongoose.Schema({
   employeeId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'employee',
-    required: true,
   },
   salaryMonth: {
     type: String,
-    required: true,
   },
   basicSalary: {
     type: Number,
-    required: true,
   },
   allowances: {
     housingAllowance: {
@@ -34,9 +31,10 @@ const payslipSchema = new mongoose.Schema({
   },
   deductions: {
     tax: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.Types.ObjectId,
       ref: 'tax',
-      required: true,
+      default:null
+   
     },
     socialSecurity: {
       type: Number,
@@ -50,7 +48,7 @@ const payslipSchema = new mongoose.Schema({
       type: Number,
       default: 0,
     },
-    esi: { 
+    esi: {
       type: Number,
       default: 0,
     },
@@ -86,25 +84,10 @@ const payslipSchema = new mongoose.Schema({
     lateDays: { type: Number, required: true },
     onLeaveDays: { type: Number, required: true },
   },
-},
-{
+}, {
   timestamps: true,
 });
 
-// Calculate net salary before saving
-payslipSchema.pre('save', function (next) {
-  this.netSalary =
-    this.basicSalary +
-    (this.allowances.housingAllowance || 0) +
-    (this.allowances.transportAllowance || 0) +
-    (this.allowances.otherAllowances || 0) -
-    (this.deductions.tax || 0) -
-    (this.deductions.socialSecurity || 0) -
-    (this.deductions.otherDeductions || 0) -
-    (this.deductions.providentFund || 0) -  
-    (this.deductions.esi || 0);            
-  next();
-});
 
 const paySlipModel = mongoose.model('paySlip', payslipSchema);
 

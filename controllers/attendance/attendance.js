@@ -83,8 +83,6 @@ export const getEmployeeAttendance = async (req, res,next) => {
     return next(error)
   }
 
-
-  console.log(req.body)
   const { employeeId } = req.body;
   try {
 
@@ -92,9 +90,7 @@ export const getEmployeeAttendance = async (req, res,next) => {
       employeeId: employeeId, adminId: req.user.adminId || req.user._id
     }).populate('employeeId', 'firstName lastName');
 
-    if (attendanceRecords.length === 0) {
-      return res.status(404).json({ message: 'No attendance records found for this user.' });
-    }
+   
 
     res.status(200).json(attendanceRecords);
   } catch (error) {

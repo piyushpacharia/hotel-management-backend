@@ -7,7 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoute/auth.routes.js';
 import addRoomRoute from './routes/roomRoute/room.routes.js';
-import roomCategory  from './routes/roomCategoryRoute/roomCategory.routes.js';
+import roomCategory from './routes/roomCategoryRoute/roomCategory.routes.js';
 import incomeRoute from "./routes/incomeRoute/income.routes.js"
 import expenseRoute from "./routes/expenseRoute/expense.routes.js"
 import packageRoute from "./routes/packageRoute/package.routes.js"
@@ -17,6 +17,8 @@ import attendanceRoute from "./routes/attedanceRoute/attendance.Routes.js"
 import paySlipRoute from "./routes/paySlipRoute/paySlip.Routes.js"
 import mealRoute from "./routes/mealRoute/meal.Routes.js"
 import taxRoute from "./routes/taxRoute/tax.Routes.js"
+import bookingSourceRoute from "./routes/bookingSourceRoute/bookingSource.Routes.js"
+import ledgerRoute from "./routes/ledgerRoute/ledger.Routes.js"
 
 
 import errorHandler from './middleware/errorHandler.js';
@@ -57,10 +59,12 @@ app.use('/attendance', attendanceRoute);
 app.use('/salary', paySlipRoute);
 app.use('/meal', mealRoute);
 app.use('/tax', taxRoute);
+app.use('/source', bookingSourceRoute);
+app.use('/ledger', ledgerRoute);
 
 
 // Setup port
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 8000;
 app.listen(port, () => {
     console.log(`Server is running on port number: ${port}`);
 });

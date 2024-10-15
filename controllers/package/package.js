@@ -7,7 +7,6 @@ const packageValidationSchema = Joi.object({
   packages: Joi.string().required(),
   price: Joi.number().valid().required(),
   description: Joi.string().required(),
-  numberOfPackage: Joi.number().integer().min(0),
 });
 
 // Validate input data using Joi
@@ -55,24 +54,24 @@ export const getPackages = async (req, res) => {
 // Update a package by ID
 export const updatePackage = async (req, res) => {
   const { id } = req.params;
-  const { packages, numberOfPackage } = req.body;
+  const { packages,price,description } = req.body;
 
   try {
-    validatePackageData(req.body); // Validate input
+    validatePackageData(req.body); 
 
     const updatedPackage = await packageModel.findByIdAndUpdate(
       id,
-      { packages, numberOfPackage },
+      { packages:packages,price:price ,description:description },
       { new: true }
     );
 
     if (!updatedPackage) {
-      return res.status(404).json({ error: "Package not found" });
+      return res.status(404).json({ success:false, error: "Package not found" });
     }
 
-    res.status(200).json({ message: "Package updated successfully", data: updatedPackage });
+    res.status(200).json({success:true, message: "Package updated successfully", data: updatedPackage });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({success:false, error: err.message });
   }
 };
 

@@ -30,8 +30,7 @@ const validateEmployee = (employee) => {
 const addEmployee = async (req, res) => {
 
     
-    console.log(req.body)
-    console.log(req.files)
+
     // Extract necessary fields from request body
     const { firstName, lastName, email, phone, address, dateOfBirth, hireDate, position, salary } = req.body;
     const adminId = req.user.adminId || req.user._id;
@@ -170,6 +169,9 @@ const updateEmployeeStatus = async (req, res) => {
         res.status(400).json({ message: 'Failed to update employee status', error: error.message });
     }
 };
+
+
+
 
 // Export all controller functions
 export {
