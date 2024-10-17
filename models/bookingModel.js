@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 const bookingSchema = new mongoose.Schema(
@@ -6,6 +5,7 @@ const bookingSchema = new mongoose.Schema(
     adminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "adminAuth",
+      required: true,
     },
     firstName: {
       type: String,
@@ -17,7 +17,8 @@ const bookingSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ["male", "female", "other"]
+      enum: ["male", "female", "other"],
+      required: true,
     },
     phone: {
       type: String,
@@ -31,13 +32,34 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-   
-    documentThumbnail:[{ type: Array }],
+    status: {
+      type: String,
+      enum:["active" , "deActive"] ,
+      default:"active"
+    },
+
+    advanceBookingAmount: {
+      type: Number,
+      default: 0,
+    },
+    remainingBookingAmount: {
+      type: Number,
+      default: 0,
+    },
+    bookingPaymentStatus: {
+      type: String,
+      enum: ["paid", "pending"],
+      default: "pending",
+    },
+    documentThumbnail: [
+      {
+        type: String, 
+      },
+    ],
     packages: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "packageModel",
-      default:null
-      
+      default: null,
     },
     roomType: {
       type: mongoose.Schema.Types.ObjectId,
@@ -52,19 +74,18 @@ const bookingSchema = new mongoose.Schema(
     meal: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "mealModel",
-     
+      default: null,
     },
     tax: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "tax",
-      
+      default: null,
     },
     bookingSourceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "bookingSourceModel",
-      
+      default: null,
     },
-
     arrivedDate: {
       type: Date,
       default: Date.now,

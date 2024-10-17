@@ -28,6 +28,7 @@ const bookingValidationSchema = Joi.object({
     tax: Joi.string().optional().allow(""),
     note: Joi.string().allow(""),
     bookingSourceId: Joi.string().allow(""),
+    advanceBookingAmount: Joi.number().allow(""),
 });
 
 export const addBooking = async (req, res) => {
@@ -47,7 +48,8 @@ export const addBooking = async (req, res) => {
         totalPerson,
         note,
         tax,
-        bookingSourceId
+        bookingSourceId,
+        advanceBookingAmount
     } = req.body;
 
     const adminId = req.user.adminId || req.user._id;
@@ -111,6 +113,12 @@ export const addBooking = async (req, res) => {
             }
         }
 
+        // Calculate remaining booking amount
+        const remainingBookingAmount = totalBookingAmount - advanceBookingAmount;
+
+        // Determine booking payment status
+        let bookingPaymentStatus = remainingBookingAmount === 0 ? "paid" : "pending";
+
         // Create the new booking object
         const newBooking = new bookingModel({
             adminId: adminId,
@@ -131,7 +139,10 @@ export const addBooking = async (req, res) => {
             tax: tax || null,
             note: note,
             bookingAmount: totalBookingAmount,
-            bookingSourceId: bookingSourceId || null
+            bookingSourceId: bookingSourceId || null,
+            remainingBookingAmount: remainingBookingAmount,
+            advanceBookingAmount: advanceBookingAmount,
+            bookingPaymentStatus: bookingPaymentStatus
         });
 
         // Save the booking
@@ -146,26 +157,25 @@ export const addBooking = async (req, res) => {
             incomeName: `Booking in room ${roomNo}`,
             incomeType: 'Room Booking',
             incomeAmount: totalBookingAmount,
-            description: `Income from booking: ${firstName} ${lastName} in room number ${roomNo}`,
+            description: `Income from booking: ${firstName} ${lastName} in room number ${roomNo.roomNumber}`,
         });
         await newIncome.save();
 
-        
+        // Add ledger history entry
         await ledgerHistoryModel.create({
             ledgerId: ledger._id,
             type: "Booking",
-            credit: totalBookingAmount,
-            description: `Income from booking: ${firstName} ${lastName} in room number ${roomNo} `,
-        })
-        // Update package if applicable
-        
+            credit: advanceBookingAmount,
+            description: `Income from booking: ${firstName} ${lastName} in room number ${roomNo}`,
+        });
 
         res.status(201).json({ success: true, message: "Booking added successfully", booking: newBooking });
     } catch (error) {
-        console.log(error)
-        res.status(500).json({ success: false, message: "Internal server error", });
+        console.log(error);
+        res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
 
 
 
@@ -331,6 +341,8 @@ export const deleteBooking = async (req, res) => {
 
 export const updateCheckOut = async (req, res) => {
     const { id } = req.params;
+    const { status } = req.body;
+
     try {
         // Find the booking by ID
         const booking = await bookingModel.findById(id);
@@ -344,21 +356,75 @@ export const updateCheckOut = async (req, res) => {
             return res.status(404).json({ success: false, message: "Room not found" });
         }
 
-        // Update room status to "open"
-        room.status = "open";
-        await room.save();
+      
+        // Update the booking and room status
+        if (status === "deActive") {
+            booking.departDate = new Date(); 
+            booking.status = status;
 
-        booking.departDate = new Date();
-        await booking.save();
+            room.status = "open"; 
+            await room.save(); 
+            await booking.save(); 
+        }
 
         return res.status(200).json({
             success: true,
-            message: "Checkout successful, room status updated to open",
+            message: "Checkout successful",
             booking,
             room
         });
     } catch (error) {
-        return res.status(500).json({ success: false, message: "Something went wrong", error });
+        return res.status(500).json({ success: false, message: "Something went wrong", error: error.message });
+    }
+};
+
+
+
+export const updateBookingStatus = async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const { bookingPaymentStatus } = req.body;
+        const ledger = await ledgerModel.findOne({ closingBalance: null });
+        if (!ledger) {
+            return res.status(401).json({ success: false, message: "Open Ledger First" });
+        }
+        // Find the booking by ID
+        const booking = await bookingModel.findById(bookingId);
+        if (!booking) {
+            return res.status(404).json({ success: false, message: "Booking not found" });
+        }
+
+
+        // Add ledger history entry
+        await ledgerHistoryModel.create({
+            ledgerId: ledger._id,
+            type: "Remaining Booking Amount",
+            credit: booking.remainingBookingAmount,
+            description: `Income from booking: ${booking.firstName} ${booking.lastName} in room number ${booking.roomNo.roomNumber}`,
+        });
+
+        // If the payment status is set to "paid"
+        if (bookingPaymentStatus === "paid") {
+            // Update the booking fields
+            booking.bookingPaymentStatus = "paid";
+            booking.advanceBookingAmount += booking.remainingBookingAmount;
+            booking.remainingBookingAmount = 0;
+        } else {
+            return res.status(400).json({ success: false, message: "Invalid payment status" });
+        }
+
+
+        // Save the updated booking
+        await booking.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Booking payment status updated successfully",
+            data: booking
+        });
+    } catch (error) {
+        console.error("Error updating booking status:", error);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
 
