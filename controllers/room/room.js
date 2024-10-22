@@ -42,7 +42,7 @@ export const addRoom = async (req, res) => {
     // Create new room
     const newRoom = new roomModel({
       roomNumber,
-      type: category._id, 
+      type: category._id,
       rent,
       bedCapacity,
       airConditioner,
@@ -51,7 +51,7 @@ export const addRoom = async (req, res) => {
     });
 
 
-   
+
     // Save new room
     await newRoom.save();
 
@@ -72,7 +72,7 @@ export const getRooms = async (req, res) => {
   const adminId = req.user.adminId || req.user._id;
 
   try {
-    const rooms = await roomModel.find({ adminId }).populate("type", "type name");  
+    const rooms = await roomModel.find({ adminId }).populate("type", "type name");
 
     res.status(200).json({ rooms });
   } catch (err) {
@@ -81,14 +81,21 @@ export const getRooms = async (req, res) => {
 };
 
 // Controller to update a room
+
 export const updateRoom = async (req, res) => {
+
+
   const { id } = req.params;
+  const { roomNumber, type, rent, bedCapacity, airConditioner, status } = req.body;
+
+
 
   const validateRoomUpdate = Joi.object({
     roomNumber: Joi.number().integer(),
     type: Joi.string(),
-    rent: Joi.number(),
-    bedCapacity: Joi.number(),
+    rent: Joi.number().required(),
+    airConditioner: Joi.string().trim().valid("ac", "non ac").required(),
+    bedCapacity: Joi.number().required(),
     status: Joi.string().valid("booked", "open", "inactive"),
   });
 
@@ -99,16 +106,9 @@ export const updateRoom = async (req, res) => {
   }
 
   try {
-    if (req.body.type) {
-      const category = await roomCategory.findById(req.body.type);
-      if (!category) {
-        return res.status(400).json({ message: "Invalid room type. Room category does not exist." });
-      }
-      req.body.type = category._id; 
-    }
-
+   
     // Find and update the room
-    const room = await roomModel.findByIdAndUpdate(id, req.body, { new: true }).populate("type", "type name");
+    const room = await roomModel.findByIdAndUpdate(id, { roomNumber, type, rent, bedCapacity, airConditioner, status }, { new: true });
     if (!room) return res.status(404).json({ message: "Room not found" });
 
     res.status(200).json({ message: "Room updated successfully", room });

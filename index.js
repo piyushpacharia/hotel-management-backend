@@ -19,6 +19,7 @@ import mealRoute from "./routes/mealRoute/meal.Routes.js"
 import taxRoute from "./routes/taxRoute/tax.Routes.js"
 import bookingSourceRoute from "./routes/bookingSourceRoute/bookingSource.Routes.js"
 import ledgerRoute from "./routes/ledgerRoute/ledger.Routes.js"
+import loungeRoute from "./routes/lounge/lounge.Routes.js"
 
 
 import errorHandler from './middleware/errorHandler.js';
@@ -61,6 +62,7 @@ app.use('/meal', mealRoute);
 app.use('/tax', taxRoute);
 app.use('/source', bookingSourceRoute);
 app.use('/ledger', ledgerRoute);
+app.use('/lounge', loungeRoute);
 
 
 // Setup port

@@ -99,7 +99,7 @@ export const addBooking = async (req, res) => {
         }
 
         // Calculate total booking amount
-        let totalBookingAmount = (roomPricePerNight * numberOfNights) + (packagePrice * numberOfNights) + (mealPrice * totalPerson);
+        let totalBookingAmount = (roomPricePerNight * numberOfNights) ;
 
         // Retrieve tax details if tax is provided
         if (tax) {
@@ -154,7 +154,7 @@ export const addBooking = async (req, res) => {
         // Add income entry
         const newIncome = new incomeModel({
             adminId,
-            incomeName: `Booking in room ${roomNo}`,
+            incomeName: `Booking in room ${selectedRoom.roomNumber}`,
             incomeType: 'Room Booking',
             incomeAmount: totalBookingAmount,
             description: `Income from booking: ${firstName} ${lastName} in room number ${roomNo.roomNumber}`,
@@ -166,7 +166,7 @@ export const addBooking = async (req, res) => {
             ledgerId: ledger._id,
             type: "Booking",
             credit: advanceBookingAmount,
-            description: `Income from booking: ${firstName} ${lastName} in room number ${roomNo}`,
+            description: `Income from booking: ${firstName} ${lastName} in room number ${selectedRoom.rent}`,
         });
 
         res.status(201).json({ success: true, message: "Booking added successfully", booking: newBooking });
@@ -407,8 +407,6 @@ export const updateBookingStatus = async (req, res) => {
         if (bookingPaymentStatus === "paid") {
             // Update the booking fields
             booking.bookingPaymentStatus = "paid";
-            booking.advanceBookingAmount += booking.remainingBookingAmount;
-            booking.remainingBookingAmount = 0;
         } else {
             return res.status(400).json({ success: false, message: "Invalid payment status" });
         }

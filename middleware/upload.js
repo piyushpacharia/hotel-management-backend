@@ -15,6 +15,7 @@ const storage = multer.diskStorage({
       expenseThumbnail: 'uploads/expenseThumbnail',
       employeeThumbnail: 'uploads/employeeThumbnail',
       employeeDocument: 'uploads/employeeDocument',
+      loungeThumbnail: 'uploads/loungeThumbnail',
 
     };
 
@@ -82,6 +83,7 @@ export const uploadFile = (req, res, next) => {
     { name: "expenseThumbnail", maxCount: 1},
     { name: "employeeThumbnail", maxCount: 1},
     { name: "employeeDocument", maxCount: 10},
+    { name: "loungeThumbnail", maxCount: 1},
 
 
   ]);
@@ -91,7 +93,7 @@ export const uploadFile = (req, res, next) => {
     if (err) return next(err);
 
     const imageFields = [
-      'documentThumbnail', 'profileThumbnail', 'expenseThumbnail','employeeThumbnail','employeeDocument',
+      'documentThumbnail', 'profileThumbnail', 'expenseThumbnail','employeeThumbnail','employeeDocument',"loungeThumbnail"
     ];
 
     // if (req.files) {
