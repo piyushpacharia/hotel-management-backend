@@ -170,6 +170,7 @@ export const deleteLoungeBooking = async (req, res) => {
         const { id } = req.params;
 
         const booking = await loungeBookingModel.findById(id);
+        console.log(booking)
         if (!booking) {
             return res.status(404).json({ success: false, message: "Booking not found" });
         }
@@ -177,6 +178,7 @@ export const deleteLoungeBooking = async (req, res) => {
         await loungeBookingModel.findByIdAndDelete(id);
         res.status(200).json({ success: true, message: "Booking deleted successfully" });
     } catch (error) {
+        console.log(error)
         res.status(500).json({ success: false, message: "Server error", error: error.message });
     }
 };
