@@ -20,7 +20,7 @@ import taxRoute from "./routes/taxRoute/tax.Routes.js"
 import bookingSourceRoute from "./routes/bookingSourceRoute/bookingSource.Routes.js"
 import ledgerRoute from "./routes/ledgerRoute/ledger.Routes.js"
 import loungeRoute from "./routes/lounge/lounge.Routes.js"
-
+import loungeBookingRoute from "./routes/louageBookingRoute/loaugeBooking.Routes.js"
 
 import errorHandler from './middleware/errorHandler.js';
 
@@ -63,6 +63,7 @@ app.use('/tax', taxRoute);
 app.use('/source', bookingSourceRoute);
 app.use('/ledger', ledgerRoute);
 app.use('/lounge', loungeRoute);
+app.use('/loungebooking', loungeBookingRoute);
 
 
 // Setup port

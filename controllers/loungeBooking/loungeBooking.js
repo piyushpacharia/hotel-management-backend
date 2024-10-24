@@ -60,6 +60,7 @@ export const createLoungeBooking = async (req, res) => {
         const loungePricePerNight = selectedLounge.rent;
         let loungeBookingAmount = loungePricePerNight * numberOfNights;
 
+
         // Apply discount if provided
         if (discount) {
             loungeBookingAmount -= Number(discount);
@@ -77,8 +78,9 @@ export const createLoungeBooking = async (req, res) => {
             }
         }
 
+
         // Calculate remaining amount and payment status
-        const remainingLoungeBookingAmount = loungeBookingAmount - (advanceloungeBookingAmount || 0);
+        const remainingLoungeBookingAmount = loungeBookingAmount - advanceloungeBookingAmount;
         const loungeBookingPaymentStatus = remainingLoungeBookingAmount === 0 ? "paid" : "pending";
 
         // Create new lounge booking
@@ -100,7 +102,7 @@ export const createLoungeBooking = async (req, res) => {
             arrivedDate: arrivalDate,
             departDate,
             note,
-            loungeBookingAmount,
+            loungeBookingAmount: loungeBookingAmount,
             discount: discount || null
         });
 
@@ -129,9 +131,20 @@ export const createLoungeBooking = async (req, res) => {
 
         res.status(201).json({ success: true, message: "Lounge booking added successfully", savedBooking });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Server error", error: error.message });
+        console.log(error)
+        res.status(500).json({ success: false, message: "Server error" });
     }
 };
+
+// Helper function to populate related fields
+const populateBookingDetails = () => [
+  
+    { path: "bookingSourceId", select: "bookingSourceName description" },
+    { path: "loungeNo", select: "loungeNumber" },
+    { path: "tax", select: "name amount" },
+
+
+];
 
 // READ: Get all lounge bookings or a specific booking by ID
 export const getLoungeBookings = async (req, res) => {
@@ -139,7 +152,7 @@ export const getLoungeBookings = async (req, res) => {
         const adminId = req.user.adminId || req.user._id;
 
         const bookings = await loungeBookingModel.find({ adminId })
-            .populate('loungeNo tax loungeBookingSourceId adminId');
+           
 
         if (!bookings) {
             return res.status(404).json({ success: false, message: "Booking not found" });
@@ -191,7 +204,7 @@ export const updateCheckOut = async (req, res) => {
             booking.departDate = new Date();
             booking.status = status;
 
-            lounge.status = "open"; 
+            lounge.status = "open";
             await lounge.save();
             await booking.save();
         }
@@ -212,7 +225,7 @@ export const updateBookingStatus = async (req, res) => {
     try {
         const { bookingId } = req.params;
         const { loungeBookingPaymentStatus } = req.body;
-        
+
         // Find open ledger
         const ledger = await ledgerModel.findOne({ closingBalance: null });
         if (!ledger) {
@@ -236,7 +249,7 @@ export const updateBookingStatus = async (req, res) => {
         // If the payment status is set to "paid"
         if (loungeBookingPaymentStatus === "paid") {
             booking.loungeBookingPaymentStatus = loungeBookingPaymentStatus;
-        
+
         }
 
         await booking.save();

@@ -40,6 +40,7 @@ export const createLounge = async (req, res) => {
         const savedLounge = await newLounge.save();
         res.status(201).json({ success: true, message: "Lounge added successfully", savedLounge });
     } catch (error) {
+        console.log(error)
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
@@ -50,7 +51,7 @@ export const getLounges = async (req, res) => {
         const adminId = req.user.adminId || req.user._id;
 
         // Fetch all lounges associated with the admin
-        const lounges = await loungeModel.find({ adminId }).populate('adminId');
+        const lounges = await loungeModel.find({ adminId });
         res.status(200).json({ success: true, message: "Fetched all lounges", lounges });
     } catch (error) {
         res.status(500).json({ success: false, message: "Server error" });
@@ -95,7 +96,7 @@ export const deleteLounge = async (req, res) => {
     try {
         const { loungeId } = req.params;
 
-        const lounge = await loungeModel.findById(id);
+        const lounge = await loungeModel.findById(loungeId);
         if (!lounge) {
             return res.status(404).json({ success: false, message: "Lounge not found" });
         }

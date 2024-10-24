@@ -8,10 +8,7 @@ const loungeSchema = new mongoose.Schema({
     },
     loungeNumber: { type: Number, required: true, unique: true },
     rent: { type: Number, required: true, min: 0 },
-    loungeThumbnail: {
-        type: String,
-        default: "null"
-    },
+    loungeThumbnail:[{ type: Array }],
     status: {
         type: String,
         enum: ["booked", "open", "inactive"],
